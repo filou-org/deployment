@@ -1,0 +1,13 @@
+resources:
+  - https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+patches:
+  - target:
+      kind: ConfigMap
+      name: argocd-cmd-params-cm
+    patch: |-
+      - op: add
+        path: /data
+        value: {}
+      - op: add
+        path: /data/server.insecure
+        value: "true"
