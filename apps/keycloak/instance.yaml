@@ -1,0 +1,17 @@
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  name: keycloak
+  namespace: keycloak
+spec:
+  db:
+    vendor: dev-file
+    poolInitialSize: 5
+    poolMinSize: 5
+    poolMaxSize: 20
+  http:
+    httpEnabled: true
+  hostname:
+    strict: false
+  transaction:
+    xaEnabled: false

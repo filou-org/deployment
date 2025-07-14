@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
 - argocd/
+- keycloak/
 
 # Métadonnées communes
 commonLabels:
