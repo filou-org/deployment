@@ -6,3 +6,5 @@ metadata:
 spec: 
   server:
     insecure: true
+  sourceNamespaces:
+    - '*'

@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- operator_group.yaml
+- subscription.yaml
+- instance.yaml
+- application.yaml
+
+namespace: argocd

@@ -12,9 +12,13 @@ up() {
   # Create namespace
   kubectl create namespace "$ARGOCD_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
   
+  # Install Kustomize CRD first
+  echo "   Installation du CRD Kustomization..."
+  kubectl apply -f "$SCRIPT_DIR/kustomize-crd.yaml"
+  
   # Create operator group
   echo "   Création du groupe d'opérateurs..."
-  kubectl create -n $ARGOCD_NAMESPACE -f "$SCRIPT_DIR/operator_group.yaml"
+  kubectl apply -n $ARGOCD_NAMESPACE -f "$SCRIPT_DIR/operator_group.yaml"
   
   # Wait for operator group to be ready
   echo "   Attente de la disponibilité du groupe d'opérateurs..."
@@ -29,15 +33,26 @@ up() {
 
   # Create subscription
   echo "   Création de la subscription..."
-  kubectl create -n $ARGOCD_NAMESPACE -f "$SCRIPT_DIR/subscription.yaml"
+  kubectl apply -n $ARGOCD_NAMESPACE -f "$SCRIPT_DIR/subscription.yaml"
   
   # Wait for subscription to be created
   echo "   Attente de la création de la subscription..."
-  kubectl wait --for=condition=InstallPlanPending --timeout=60s subscription/argocd-operator -n "$ARGOCD_NAMESPACE" || {
+  kubectl wait --for=condition=InstallPlanPending --timeout=120s subscription/argocd-operator -n "$ARGOCD_NAMESPACE" || {
     echo "   ⚠️  Subscription pas encore en attente, vérification..."
   }
 
-  # Install ArgoCD instance
+  # Wait for operator to be installed and CRDs to be available
+  echo "   Attente de l'installation de l'opérateur et des CRDs..."
+  for i in {1..60}; do
+    if kubectl get crd argocds.argoproj.io >/dev/null 2>&1; then
+      echo "   ✅ CRDs ArgoCD disponibles"
+      break
+    fi
+    echo "   ⏳ Attente des CRDs ArgoCD... ($i/60)"
+    sleep 10
+  done
+
+  # Install ArgoCD instance
   echo "   Création de l'instance ArgoCD..."
   kubectl apply -n $ARGOCD_NAMESPACE -f "$SCRIPT_DIR/instance.yaml"
 
@@ -59,8 +74,16 @@ up() {
   kubectl delete pod -n $ARGOCD_NAMESPACE -l app.kubernetes.io/name=argocd-server
   kubectl wait --for=condition=Ready --timeout=120s pod -n "$ARGOCD_NAMESPACE" -l app.kubernetes.io/name=argocd-server
 
-  echo "Connectto ArgoCD server using login 'admin' and password 'password'"
+  echo "Connect to ArgoCD server using login 'admin' and password 'password'"
   echo "kubectl port-forward svc/argocd-server 8080:80 -n $ARGOCD_NAMESPACE"
+
+  # Create argocd project 
+  echo "   Création du projet ArgoCD..."
+  kubectl apply -n $ARGOCD_NAMESPACE -f "$SCRIPT_DIR/project.yaml"
+
+  # Create application
+  echo "   Création de l'application dans ArgoCD..."
+  kubectl apply -n $ARGOCD_NAMESPACE -f "$SCRIPT_DIR/application.yaml"
 
   echo "✅ Installation de l'opérateur ArgoCD terminée avec succès"
 }

@@ -9,3 +9,5 @@ spec:
   source: operatorhubio-catalog 
   sourceNamespace: olm
   installPlanApproval: Automatic
+  startingCSV: argocd-operator.v0.14.1
+  

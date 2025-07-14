@@ -16,12 +16,12 @@ create() {
 
   # Check if OLM is installed
   echo "   Vérification de l'installation d'OLM..."
-  if kubectl get namespace olm >/dev/null 2>&1; then
-    echo "   ✅ OLM installé avec succès"
-  else
-    echo "   ❌ Échec de l'installation d'OLM"
-    exit 1
-  fi
+  sleep 10
+  kubectl wait --for=condition=Ready --timeout=180s --all pods -n olm || {
+    echo "   ❌ Timeout en attendant les pods OLM"
+    return 1
+  }
+  echo "   ✅ Tous les pods OLM sont prêts"
 
   # Install ArgoCD Operator
   echo "🚀 Installation de l'opérateur ArgoCD..."

@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: filou
+  namespace: argocd # Important: Le AppProject doit être dans le namespace où Argo CD est installé (généralement `argocd`)
+spec:
+  description: Projet pour les applications Filou
+  sourceRepos:
+  - 'https://github.com/filou-org/deployment.git' # Ajoutez votre dépôt spécifique
+  destinations:
+  - namespace: '*'  # ← Autoriser tous les namespaces
+    server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
